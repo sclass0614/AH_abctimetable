@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>일일 활동 시간표</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Supabase CDN 추가 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase.js"></script>
+</head>
+<body>
+    <div class="date-selector">
+        <input type="date" id="dateSelector">
+        <button class="btn" onclick="loadSchedule()">
+            <i class="fas fa-calendar-alt"></i>
+            시간표 조회
+        </button>
+    </div>
+
+    <div class="control-panel">
+        <div class="control-group">
+            <label>정렬 기준:</label>
+            <div class="sort-options">
+                <div class="sort-select">
+                    <label>1순위:</label>
+                    <select id="sortPrimary" class="sort-combo">
+                        <option value="">선택 안함</option>
+                        <option value="time">시간</option>
+                        <option value="staff">직원명</option>
+                        <option value="class">차수</option>
+                    </select>
+                </div>
+                <div class="sort-select">
+                    <label>2순위:</label>
+                    <select id="sortSecondary" class="sort-combo">
+                        <option value="">선택 안함</option>
+                        <option value="time">시간</option>
+                        <option value="staff">직원명</option>
+                        <option value="class">차수</option>
+                    </select>
+                </div>
+                <div class="sort-select">
+                    <label>3순위:</label>
+                    <select id="sortTertiary" class="sort-combo">
+                        <option value="">선택 안함</option>
+                        <option value="time">시간</option>
+                        <option value="staff">직원명</option>
+                        <option value="class">차수</option>
+                    </select>
+                </div>
+                <div class="sort-order">
+                    <label>순서:</label>
+                    <select id="sortDirection">
+                        <option value="asc">오름차순</option>
+                        <option value="desc">내림차순</option>
+                    </select>
+                </div>
+                <button class="btn btn-outline" onclick="applySorting()">
+                    <i class="fas fa-sort"></i> 정렬하기
+                </button>
+            </div>
+        </div>
+        <div class="control-group">
+            <label>차수 필터:</label>
+            <select id="classFilter" onchange="applyFilters()">
+                <option value="">전체 차수</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>직원명 필터:</label>
+            <select id="staffFilter" onchange="applyFilters()">
+                <option value="">전체 직원명</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>회원 필터:</label>
+            <select id="memberFilter" onchange="applyFilters()">
+                <option value="">전체 회원</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label></label> <!-- 빈 라벨로 그리드 구조 유지 -->
+            <div class="button-group">
+                <button class="btn btn-secondary merge-button" id="toggleMergeBtn" onclick="toggleMergeRows()">
+                    <i class="fas fa-compress-alt"></i> 차수합치기
+                </button>
+                <button class="btn btn-secondary staff-merge-button" id="toggleStaffMergeBtn" onclick="toggleStaffMerge()">
+                    <i class="fas fa-user-friends"></i> 직원명합치기
+                </button>
+                <button class="btn btn-secondary print-button" onclick="window.print()">
+                    <i class="fas fa-print"></i> 인쇄하기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading" id="loadingIndicator">
+        <i class="fas fa-spinner"></i>
+        데이터를 불러오는 중...
+    </div>
+
+    <div class="a4-container">
+        <h1 class="schedule-header">우리집 일상선택 시간표</h1>
+        <div class="date-display" id="currentDate"></div>
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th>차수</th>
+                    <th>시간</th>
+                    <th>활동명</th>
+                    <th>직원명</th>
+                    <th>참여 회원</th>
+                </tr>
+            </thead>
+            <tbody id="scheduleTableBody">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+       
+
+        // 시간 포맷팅 함수는 그대로 유지
+        function formatTime(time) {
+            const timeStr = String(time).padStart(4, '0');
+            return `${timeStr.substring(0, 2)}:${timeStr.substring(2)}`;
+        }
+
+        // 날짜 포맷팅 함수 수정
+        function formatDate(dateStr) {
+            if (dateStr instanceof Date) {
+                return formatDateFromDate(dateStr);
+            }
+            // YYYYMMDD 형식의 문자열을 날짜로 변환
+            const year = dateStr.substring(0, 4);
+            const month = dateStr.substring(4, 6);
+            const day = dateStr.substring(6, 8);
+            const date = new Date(year, parseInt(month) - 1, day);
+            return formatDateFromDate(date);
+        }
+
+        function formatDateFromDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const weekDay = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
+            return `${year}년 ${month}월 ${day}일 (${weekDay})`;
+        }
+
+        // 날짜 선택 초기화
+        async function initializeDateSelector() {
+            const today = new Date();
+            const dateSelector = document.getElementById('dateSelector');
+            dateSelector.valueAsDate = today;
+            
+            // 오늘 날짜를 표시
+            const formattedDate = formatDateFromDate(today);
+            document.getElementById('currentDate').textContent = formattedDate;
+            
+            // 오늘 날짜의 데이터 바로 로드
+            const yyyymmdd = parseInt(formatYYYYMMDD(today));
+            
+            document.getElementById('loadingIndicator').style.display = 'block';
+            
+            try {
+                const data = await getScheduleData(yyyymmdd);
+                scheduleDataAll = data;
+                createTableRows(data);
+            } catch (error) {
+                handleError(error);
+            } finally {
+                document.getElementById('loadingIndicator').style.display = 'none';
+            }
+        }
+
+        let currentData = [];
+        let sortCriteria = [];
+        let scheduleDataAll = []; // 전체 데이터를 저장할 변수
+
+        // 정렬 적용 함수 수정
+        function applySorting() {
+            sortCriteria = [];
+            const primary = document.getElementById('sortPrimary').value;
+            const secondary = document.getElementById('sortSecondary').value;
+            const tertiary = document.getElementById('sortTertiary').value;
+
+            if (primary) sortCriteria.push(primary);
+            if (secondary && secondary !== primary) sortCriteria.push(secondary);
+            if (tertiary && tertiary !== primary && tertiary !== secondary) sortCriteria.push(tertiary);
+            
+            applyFilters();
+        }
+
+        // 다중 정렬 함수 수정
+        function multiSort(data, criteria, direction) {
+            return [...data].sort((a, b) => {
+                for (const criterion of criteria) {
+                    let comparison = 0;
+                    
+                    switch (criterion) {
+                        case 'time':
+                            comparison = parseInt(a.시작시간) - parseInt(b.시작시간);
+                            break;
+                        case 'staff':
+                            comparison = a.직원명.localeCompare(b.직원명);
+                            break;
+                        case 'class':
+                            comparison = a.차수.localeCompare(b.차수);
+                            break;
+                    }
+                    
+                    if (comparison !== 0) {
+                        return direction === 'desc' ? -comparison : comparison;
+                    }
+                }
+                return 0;
+            });
+        }
+
+        // 활동별로 데이터 그룹화하는 함수
+        function groupByActivity(data) {
+            const groups = {};
+            
+            data.forEach(item => {
+                // 활동을 식별하는 키 생성 (계획_ID 또는 같은 활동을 그룹화할 수 있는 키)
+                const key = item.계획_ID;
+                
+                if (!groups[key]) {
+                    groups[key] = {
+                        계획_ID: item.계획_ID,
+                        차수: item.차수,
+                        시작시간: item.시작시간,
+                        종료시간: item.종료시간,
+                        직원명: item.직원명,
+                        활동명: item.활동명,
+                        생활영역: item.생활영역,
+                        회원명: []
+                    };
+                }
+                
+                // 회원 추가
+                groups[key].회원명.push(item.회원명);
+            });
+            
+            // 객체를 배열로 변환
+            return Object.values(groups);
+        }
+
+        // 랜덤 파스텔 클래스 생성 함수
+        function getRandomPastelClass() {
+            const pastelCount = 8; // 파스텔 색상 개수
+            const randomNum = Math.floor(Math.random() * pastelCount) + 1;
+            return `pastel-${randomNum}`;
+        }
+
+        // 각 회원에게 고유한 파스텔 색상 부여 
+        const memberColorMap = new Map();
+        
+        // 특정 회원에게 항상 같은 색상을 부여하는 함수
+        function getMemberColorClass(memberName) {
+            if (!memberColorMap.has(memberName)) {
+                memberColorMap.set(memberName, getRandomPastelClass());
+            }
+            return memberColorMap.get(memberName);
+        }
+
+        // 행 병합 상태 관리
+        let isRowsMerged = false;
+        let isStaffMerged = false;
+        let originalTableStructure = null;
+
+        // 행 병합 토글 함수
+        function toggleMergeRows() {
+            isRowsMerged = !isRowsMerged;
+            
+            // 버튼 텍스트 업데이트
+            const toggleBtn = document.getElementById('toggleMergeBtn');
+            if (isRowsMerged) {
+                toggleBtn.innerHTML = '<i class="fas fa-compress-alt"></i> 합친 행 분리하기';
+                
+                // 차수, 시간, 직원명 기준으로 정렬 후 병합
+                sortCriteria = ['class', 'time', 'staff'];
+                const direction = 'asc';
+                
+                // 필터 상태 유지하면서 정렬만 변경
+                const staffFilter = document.getElementById('staffFilter').value;
+                const memberFilter = document.getElementById('memberFilter').value;
+                const classFilter = document.getElementById('classFilter').value;
+                
+                let filteredData = scheduleDataAll;
+                
+                if (classFilter) {
+                    filteredData = filteredData.filter(item => item.차수 === classFilter);
+                }
+                if (staffFilter) {
+                    filteredData = filteredData.filter(item => item.직원명 === staffFilter);
+                }
+                if (memberFilter) {
+                    filteredData = filteredData.filter(item => item.회원명 === memberFilter);
+                }
+                
+                let sortedData = multiSort(filteredData, sortCriteria, direction);
+                const groupedData = groupByActivity(sortedData);
+                
+                // 테이블 다시 생성
+                const tbody = document.getElementById('scheduleTableBody');
+                tbody.innerHTML = '';
+                
+                if (groupedData.length === 0) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = '<td colspan="5" style="text-align: center;">해당 조건의 일정이 없습니다.</td>';
+                    tbody.appendChild(row);
+                    return;
+                }
+                
+                // 그룹화된 데이터로 테이블 생성
+                groupedData.forEach(group => {
+                    const row = document.createElement('tr');
+                    
+                    // 회원 태그 생성
+                    const memberTags = group.회원명.map(member => 
+                        `<span class="member-tag ${getMemberColorClass(member)}">${member}</span>`
+                    ).join('');
+                    
+                    row.innerHTML = `
+                        <td>${group.차수}</td>
+                        <td>${formatTime(group.시작시간)} - ${formatTime(group.종료시간)}</td>
+                        <td>
+                            <span class="activity-tag">${group.활동명}</span>
+                        </td>
+                        <td>${group.직원명}</td>
+                        <td>
+                            <div class="members-list">
+                                ${memberTags}
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+                // 행 병합 적용
+                mergeTableRows();
+            } else {
+                toggleBtn.innerHTML = '<i class="fas fa-compress-alt"></i> 차수합치기';
+                
+                // 병합 해제하고 원래 필터 상태로 복원
+                applyFilters();
+            }
+        }
+        
+        // 행 병합 처리 함수
+        function mergeTableRows() {
+            const tbody = document.getElementById('scheduleTableBody');
+            const rows = tbody.querySelectorAll('tr');
+            
+            // 먼저 모든 rowspan 및 스타일 초기화
+            rows.forEach(row => {
+                row.querySelectorAll('td').forEach(cell => {
+                    cell.removeAttribute('rowspan');
+                    cell.classList.remove('rowspan-cell', 'hidden-row');
+                });
+            });
+            
+            if (rows.length <= 1) return;
+            
+            let prevClass = null;
+            let prevTime = null;
+            let rowspanClassCount = 1;
+            let rowspanTimeCount = 1;
+            let classCell = null;
+            let timeCell = null;
+            
+            for (let i = 0; i < rows.length; i++) {
+                const cells = rows[i].querySelectorAll('td');
+                if (cells.length < 2) continue;
+                
+                const currentClass = cells[0].textContent;
+                const currentTime = cells[1].textContent;
+                
+                // 첫 번째 행은 기준값으로 설정
+                if (i === 0) {
+                    prevClass = currentClass;
+                    prevTime = currentTime;
+                    classCell = cells[0];
+                    timeCell = cells[1];
+                    continue;
+                }
+                
+                // 차수가 같은 경우 rowspan 증가
+                if (currentClass === prevClass) {
+                    rowspanClassCount++;
+                    cells[0].classList.add('hidden-row');
+                    
+                    // 시간도 같은 경우 시간 rowspan 증가
+                    if (currentTime === prevTime) {
+                        rowspanTimeCount++;
+                        cells[1].classList.add('hidden-row');
+                    } else {
+                        // 시간이 다르면 이전 시간 rowspan 적용하고 새 기준 설정
+                        if (rowspanTimeCount > 1) {
+                            timeCell.setAttribute('rowspan', rowspanTimeCount);
+                            timeCell.classList.add('rowspan-cell');
+                        }
+                        rowspanTimeCount = 1;
+                        prevTime = currentTime;
+                        timeCell = cells[1];
+                    }
+                } else {
+                    // 차수가 다르면 이전 차수/시간에 rowspan 적용하고 새 기준 설정
+                    if (rowspanClassCount > 1) {
+                        classCell.setAttribute('rowspan', rowspanClassCount);
+                        classCell.classList.add('rowspan-cell');
+                    }
+                    if (rowspanTimeCount > 1) {
+                        timeCell.setAttribute('rowspan', rowspanTimeCount);
+                        timeCell.classList.add('rowspan-cell');
+                    }
+                    rowspanClassCount = 1;
+                    rowspanTimeCount = 1;
+                    prevClass = currentClass;
+                    prevTime = currentTime;
+                    classCell = cells[0];
+                    timeCell = cells[1];
+                }
+            }
+            
+            // 마지막 그룹 처리
+            if (rowspanClassCount > 1) {
+                classCell.setAttribute('rowspan', rowspanClassCount);
+                classCell.classList.add('rowspan-cell');
+            }
+            if (rowspanTimeCount > 1) {
+                timeCell.setAttribute('rowspan', rowspanTimeCount);
+                timeCell.classList.add('rowspan-cell');
+            }
+        }
+
+        // 직원명 기준 병합 토글 함수
+        function toggleStaffMerge() {
+            isStaffMerged = !isStaffMerged;
+            
+            // 버튼 텍스트 업데이트
+            const toggleBtn = document.getElementById('toggleStaffMergeBtn');
+            if (isStaffMerged) {
+                toggleBtn.innerHTML = '<i class="fas fa-user-friends"></i> 원래대로';
+                
+                // 기존 행 병합 상태 기억
+                const wasRowsMerged = isRowsMerged;
+                if (isRowsMerged) {
+                    // 차수 합치기 중지
+                    isRowsMerged = false;
+                    document.getElementById('toggleMergeBtn').innerHTML = '<i class="fas fa-compress-alt"></i> 차수합치기';
+                }
+                
+                // 직원명 기준 재정렬 및 병합
+                applyStaffMerge();
+            } else {
+                toggleBtn.innerHTML = '<i class="fas fa-user-friends"></i> 직원명합치기';
+                
+                // 테이블 헤더 원래대로 복원
+                const thead = document.querySelector('.schedule-table thead tr');
+                thead.innerHTML = `
+                    <th>차수</th>
+                    <th>시간</th>
+                    <th>활동명</th>
+                    <th>직원명</th>
+                    <th>참여 회원</th>
+                `;
+                
+                // 원래 정렬 및 필터 상태로 복원
+                applyFilters();
+            }
+        }
+        
+        // 직원명 기준 병합 적용 함수
+        function applyStaffMerge() {
+            // 직원명를 첫 번째 열로 만들고 직원명 + 시간 순으로 정렬
+            const tbody = document.getElementById('scheduleTableBody');
+            const thead = document.querySelector('.schedule-table thead tr');
+            
+            // 테이블 헤더 순서 변경
+            const headers = thead.querySelectorAll('th');
+            const headerTexts = Array.from(headers).map(th => th.textContent);
+            
+            // 직원명 열을 첫 번째로 이동
+            const staffIndex = headerTexts.indexOf('직원명');
+            if (staffIndex > 0) {
+                const staffHeader = headerTexts.splice(staffIndex, 1)[0];
+                headerTexts.unshift(staffHeader);
+                
+                thead.innerHTML = headerTexts.map(text => `<th>${text}</th>`).join('');
+            }
+            
+            // 데이터를 직원명 + 시간 기준으로 정렬
+            sortCriteria = ['staff', 'time'];
+            const direction = 'asc';
+            let sortedData = multiSort(scheduleDataAll, sortCriteria, direction);
+            
+            // 활동별로 그룹화
+            const groupedData = groupByActivity(sortedData);
+            
+            // 새로운 테이블 데이터 생성
+            tbody.innerHTML = '';
+            
+            if (groupedData.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="5" style="text-align: center;">해당 조건의 일정이 없습니다.</td>';
+                tbody.appendChild(row);
+                return;
+            }
+            
+            // 그룹화된 데이터로 테이블 생성 (직원명를 첫 번째 열로)
+            groupedData.forEach(group => {
+                const row = document.createElement('tr');
+                
+                // 회원 태그 생성
+                const memberTags = group.회원명.map(member => 
+                    `<span class="member-tag ${getMemberColorClass(member)}">${member}</span>`
+                ).join('');
+                
+                row.innerHTML = `
+                    <td>${group.직원명}</td>
+                    <td>${group.차수}</td>
+                    <td>${formatTime(group.시작시간)} - ${formatTime(group.종료시간)}</td>
+                    <td>
+                        <span class="activity-tag">${group.활동명}</span>
+                    </td>
+                    <td>
+                        <div class="members-list">
+                            ${memberTags}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // 직원명 기준으로 행 병합
+            mergeStaffRows();
+        }
+        
+        // 직원명 기준 행 병합 처리
+        function mergeStaffRows() {
+            const tbody = document.getElementById('scheduleTableBody');
+            const rows = tbody.querySelectorAll('tr');
+            
+            // 먼저 모든 rowspan 및 스타일 초기화
+            rows.forEach(row => {
+                row.querySelectorAll('td').forEach(cell => {
+                    cell.removeAttribute('rowspan');
+                    cell.classList.remove('rowspan-cell', 'hidden-row');
+                });
+            });
+            
+            if (rows.length <= 1) return;
+            
+            let prevStaff = null;
+            let rowspanStaffCount = 1;
+            let staffCell = null;
+            
+            for (let i = 0; i < rows.length; i++) {
+                const cells = rows[i].querySelectorAll('td');
+                if (cells.length < 1) continue;
+                
+                const currentStaff = cells[0].textContent;
+                
+                // 첫 번째 행은 기준값으로 설정
+                if (i === 0) {
+                    prevStaff = currentStaff;
+                    staffCell = cells[0];
+                    // 첫 번째 행에도 스타일 적용
+                    staffCell.classList.add('rowspan-cell');
+                    continue;
+                }
+                
+                // 직원명가 같은 경우 rowspan 증가
+                if (currentStaff === prevStaff) {
+                    rowspanStaffCount++;
+                    cells[0].classList.add('hidden-row');
+                } else {
+                    // 직원명가 다르면 이전 직원명에 rowspan 적용하고 새 기준 설정
+                    if (rowspanStaffCount > 1) {
+                        staffCell.setAttribute('rowspan', rowspanStaffCount);
+                    }
+                    rowspanStaffCount = 1;
+                    prevStaff = currentStaff;
+                    staffCell = cells[0];
+                    // 새 직원명 셀에도 스타일 적용
+                    staffCell.classList.add('rowspan-cell');
+                }
+            }
+            
+            // 마지막 그룹 처리
+            if (rowspanStaffCount > 1) {
+                staffCell.setAttribute('rowspan', rowspanStaffCount);
+            }
+        }
+
+        // 필터 적용 함수 수정
+        function applyFilters() {
+            const staffFilter = document.getElementById('staffFilter').value;
+            const memberFilter = document.getElementById('memberFilter').value;
+            const classFilter = document.getElementById('classFilter').value;
+
+            let filteredData = scheduleDataAll;
+
+            if (classFilter) {
+                filteredData = filteredData.filter(item => item.차수 === classFilter);
+            }
+            if (staffFilter) {
+                filteredData = filteredData.filter(item => item.직원명 === staffFilter);
+            }
+            if (memberFilter) {
+                filteredData = filteredData.filter(item => item.회원명 === memberFilter);
+            }
+
+            if (sortCriteria.length > 0) {
+                const direction = document.getElementById('sortDirection').value;
+                filteredData = multiSort(filteredData, sortCriteria, direction);
+            }
+
+            const tbody = document.getElementById('scheduleTableBody');
+            tbody.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="5" style="text-align: center;">해당 조건의 일정이 없습니다.</td>';
+                tbody.appendChild(row);
+                return;
+            }
+
+            // 활동별로 그룹화
+            const groupedData = groupByActivity(filteredData);
+            
+            // 그룹화된 데이터로 테이블 생성
+            groupedData.forEach(group => {
+                const row = document.createElement('tr');
+                
+                // 회원 태그 생성
+                const memberTags = group.회원명.map(member => 
+                    `<span class="member-tag ${getMemberColorClass(member)}">${member}</span>`
+                ).join('');
+                
+                row.innerHTML = `
+                    <td>${group.차수}</td>
+                    <td>${formatTime(group.시작시간)} - ${formatTime(group.종료시간)}</td>
+                    <td>
+                        <span class="activity-tag">${group.활동명}</span>
+                    </td>
+                    <td>${group.직원명}</td>
+                    <td>
+                        <div class="members-list">
+                            ${memberTags}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // 행 병합 상태에 따라 병합 적용
+            if (isRowsMerged) {
+                mergeTableRows();
+            }
+
+            updateFilterStatus('classFilter', classFilter);
+            updateFilterStatus('staffFilter', staffFilter);
+            updateFilterStatus('memberFilter', memberFilter);
+        }
+
+        // 필터 상태 업데이트 함수 추가
+        function updateFilterStatus(filterId, value) {
+            const select = document.getElementById(filterId);
+            if (value) {
+                select.classList.add('filter-active');
+            } else {
+                select.classList.remove('filter-active');
+            }
+        }
+
+        // 필터 옵션 업데이트 함수 수정
+        function updateFilterOptions(data) {
+            scheduleDataAll = data;
+            
+            const staffFilter = document.getElementById('staffFilter');
+            const memberFilter = document.getElementById('memberFilter');
+            const classFilter = document.getElementById('classFilter');
+            
+            // 차수 옵션 업데이트
+            const classSet = new Set(data.map(item => item.차수));
+            classFilter.innerHTML = '<option value="">전체 차수</option>';
+            [...classSet].sort().forEach(class_ => {
+                classFilter.innerHTML += `<option value="${class_}">${class_}</option>`;
+            });
+
+            // 직원명 옵션 업데이트
+            const staffSet = new Set(data.map(item => item.직원명));
+            staffFilter.innerHTML = '<option value="">전체 직원명</option>';
+            [...staffSet].sort().forEach(staff => {
+                staffFilter.innerHTML += `<option value="${staff}">${staff}</option>`;
+            });
+
+            // 회원 옵션 업데이트
+            const memberSet = new Set(data.map(item => item.회원명));
+            memberFilter.innerHTML = '<option value="">전체 회원</option>';
+            [...memberSet].sort().forEach(member => {
+                memberFilter.innerHTML += `<option value="${member}">${member}</option>`;
+            });
+        }
+
+        // 테이블 데이터 생성 함수는 그대로 유지
+        function createTableRows(data) {
+            updateFilterOptions(data);
+            applyFilters();
+            document.getElementById('loadingIndicator').style.display = 'none';
+        }
+
+        // 스케줄 로드 함수 수정
+        async function loadSchedule() {
+            const dateSelector = document.getElementById('dateSelector');
+            const selectedDate = new Date(dateSelector.value);
+            const formattedDate = formatDateFromDate(selectedDate);
+            document.getElementById('currentDate').textContent = formattedDate;
+            
+            // YYYYMMDD 형식으로 날짜 변환 후 정수로 변환
+            const yyyymmdd = parseInt(formatYYYYMMDD(selectedDate));
+            document.getElementById('loadingIndicator').style.display = 'block';
+            
+            try {
+                const data = await getScheduleData(yyyymmdd);
+                scheduleDataAll = data;
+                createTableRows(data);
+            } catch (error) {
+                handleError(error);
+            } finally {
+                document.getElementById('loadingIndicator').style.display = 'none';
+            }
+        }
+
+        // YYYYMMDD 형식으로 날짜 변환하는 함수
+        function formatYYYYMMDD(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}${month}${day}`;
+        }
+
+        // 에러 처리 함수
+        function handleError(error) {
+            document.getElementById('loadingIndicator').style.display = 'none';
+            alert('데이터를 불러오는 중 오류가 발생했습니다: ' + error);
+        }
+
+        // 페이지 로드 시 실행
+        window.onload = function() {
+            // 로딩 인디케이터 표시
+            document.getElementById('loadingIndicator').style.display = 'block';
+            
+            // Supabase 초기화
+            initSupabaseClient().then(() => {
+                initializeDateSelector();
+            }).catch(error => {
+                handleError(error);
+            });
+        };
+    </script>
+</body>
+</html>
