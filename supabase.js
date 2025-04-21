@@ -1,16 +1,18 @@
- // Supabase 클라이언트 직접 초기화
-        const SUPABASE_URL = "https://dfomeijvzayyszisqflo.supabase.co";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmb21laWp2emF5eXN6aXNxZmxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ4NjYwNDIsImV4cCI6MjA2MDQ0MjA0Mn0.-r1iL04wvPNdBeIvgxqXLF2rWqIUX5Ot-qGQRdYo_qk";
-        
-        let supabaseClient;
-        
-        async function initSupabaseClient() {
-            if (!supabaseClient) {
-                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            }
-            return supabaseClient;
+// Supabase 클라이언트 직접 초기화
+const SUPABASE_URL = "https://dfomeijvzayyszisqflo.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmb21laWp2emF5eXN6aXNxZmxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ4NjYwNDIsImV4cCI6MjA2MDQ0MjA0Mn0.-r1iL04wvPNdBeIvgxqXLF2rWqIUX5Ot-qGQRdYo_qk";
+
+let supabaseClient;
+
+// Supabase 클라이언트 초기화 함수
+function initSupabase() {
+    if (!supabaseClient) {
+        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+    return supabaseClient;
 }
-        
+
+window.supabase = initSupabase();
 
 // 특정 날짜의 스케줄 데이터를 가져오는 함수 (code.gs의 getScheduleData 대체)
 async function getScheduleData(dateStr) {

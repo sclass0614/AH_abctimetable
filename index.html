@@ -8,6 +8,8 @@
     <!-- Supabase CDN 추가 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase.js"></script>
+    <script type="module" src="https://sclass0614.github.io/authCheck/authCheck.js"></script>
+
 </head>
 <body>
     <div class="date-selector">
@@ -756,7 +758,7 @@
             document.getElementById('loadingIndicator').style.display = 'block';
             
             // Supabase 초기화
-            initSupabaseClient().then(() => {
+            initSupabase().then(() => {
                 initializeDateSelector();
             }).catch(error => {
                 handleError(error);
