@@ -31,6 +31,7 @@
                         <option value="time">시간</option>
                         <option value="staff">직원명</option>
                         <option value="class">차수</option>
+                        <option value="activity">활동명</option>
                     </select>
                 </div>
                 <div class="sort-select">
@@ -40,6 +41,7 @@
                         <option value="time">시간</option>
                         <option value="staff">직원명</option>
                         <option value="class">차수</option>
+                        <option value="activity">활동명</option>
                     </select>
                 </div>
                 <div class="sort-select">
@@ -49,6 +51,7 @@
                         <option value="time">시간</option>
                         <option value="staff">직원명</option>
                         <option value="class">차수</option>
+                        <option value="activity">활동명</option>
                     </select>
                 </div>
                 <div class="sort-order">
@@ -191,6 +194,11 @@
             if (secondary && secondary !== primary) sortCriteria.push(secondary);
             if (tertiary && tertiary !== primary && tertiary !== secondary) sortCriteria.push(tertiary);
             
+            // 정렬 기준이 없으면 기본값으로 차수, 활동명 오름차순 사용
+            if (sortCriteria.length === 0) {
+                sortCriteria = ['class', 'activity'];
+            }
+            
             applyFilters();
         }
 
@@ -210,6 +218,9 @@
                         case 'class':
                             comparison = a.차수.localeCompare(b.차수);
                             break;
+                        case 'activity':
+                            comparison = a.활동명.localeCompare(b.활동명);
+                            break;
                     }
                     
                     if (comparison !== 0) {
@@ -225,8 +236,8 @@
             const groups = {};
             
             data.forEach(item => {
-                // 활동을 식별하는 키 생성 (계획_ID 또는 같은 활동을 그룹화할 수 있는 키)
-                const key = item.계획_ID;
+                // 활동을 식별하는 고유 키 생성 - 계획_ID 대신 차수 + 시작시간 + 활동명 + 직원명 조합으로 생성
+                const key = `${item.차수}_${item.시작시간}_${item.활동명}_${item.직원명}`;
                 
                 if (!groups[key]) {
                     groups[key] = {
@@ -756,6 +767,9 @@
         window.onload = function() {
             // 로딩 인디케이터 표시
             document.getElementById('loadingIndicator').style.display = 'block';
+            
+            // 기본 정렬 기준 설정 - 차수, 활동명 오름차순
+            sortCriteria = ['class', 'activity'];
             
             // Supabase 초기화
             initSupabase().then(() => {
