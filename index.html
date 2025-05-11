@@ -12,15 +12,20 @@
 
 </head>
 <body>
-    <div class="date-selector">
-        <input type="date" id="dateSelector">
-        <button class="btn" onclick="loadSchedule()">
-            <i class="fas fa-calendar-alt"></i>
-            시간표 조회
-        </button>
-    </div>
+    <!-- 토글 버튼 추가 -->
+    <button id="toggleControlPanel" class="toggle-button">
+        <i class="fas fa-cog"></i>
+        <span>설정 열기</span>
+    </button>
 
-    <div class="control-panel">
+    <div class="control-panel collapsed">
+        <div class="date-selector">
+            <input type="date" id="dateSelector">
+            <button class="btn" onclick="loadSchedule()">
+                <i class="fas fa-calendar-alt"></i>
+                시간표 조회
+            </button>
+        </div>
         <div class="control-group">
             <label>정렬 기준:</label>
             <div class="sort-options">
@@ -100,11 +105,6 @@
         </div>
     </div>
 
-    <div class="loading" id="loadingIndicator">
-        <i class="fas fa-spinner"></i>
-        데이터를 불러오는 중...
-    </div>
-
     <div class="a4-container">
         <h1 class="schedule-header">우리집 일상선택 시간표</h1>
         <div class="date-display" id="currentDate"></div>
@@ -166,16 +166,12 @@
             // 오늘 날짜의 데이터 바로 로드
             const yyyymmdd = parseInt(formatYYYYMMDD(today));
             
-            document.getElementById('loadingIndicator').style.display = 'block';
-            
             try {
                 const data = await getScheduleData(yyyymmdd);
                 scheduleDataAll = data;
                 createTableRows(data);
             } catch (error) {
                 handleError(error);
-            } finally {
-                document.getElementById('loadingIndicator').style.display = 'none';
             }
         }
 
@@ -262,7 +258,7 @@
 
         // 랜덤 파스텔 클래스 생성 함수
         function getRandomPastelClass() {
-            const pastelCount = 8; // 파스텔 색상 개수
+            const pastelCount = 15; // 파스텔 색상 개수를 15개로 증가
             const randomNum = Math.floor(Math.random() * pastelCount) + 1;
             return `pastel-${randomNum}`;
         }
@@ -724,7 +720,6 @@
         function createTableRows(data) {
             updateFilterOptions(data);
             applyFilters();
-            document.getElementById('loadingIndicator').style.display = 'none';
         }
 
         // 스케줄 로드 함수 수정
@@ -736,7 +731,6 @@
             
             // YYYYMMDD 형식으로 날짜 변환 후 정수로 변환
             const yyyymmdd = parseInt(formatYYYYMMDD(selectedDate));
-            document.getElementById('loadingIndicator').style.display = 'block';
             
             try {
                 const data = await getScheduleData(yyyymmdd);
@@ -744,8 +738,6 @@
                 createTableRows(data);
             } catch (error) {
                 handleError(error);
-            } finally {
-                document.getElementById('loadingIndicator').style.display = 'none';
             }
         }
 
@@ -759,17 +751,31 @@
 
         // 에러 처리 함수
         function handleError(error) {
-            document.getElementById('loadingIndicator').style.display = 'none';
             alert('데이터를 불러오는 중 오류가 발생했습니다: ' + error);
         }
 
         // 페이지 로드 시 실행
         window.onload = function() {
-            // 로딩 인디케이터 표시
-            document.getElementById('loadingIndicator').style.display = 'block';
-            
             // 기본 정렬 기준 설정 - 차수, 활동명 오름차순
             sortCriteria = ['class', 'activity'];
+            
+            // 토글 버튼 이벤트 리스너 추가
+            document.getElementById('toggleControlPanel').addEventListener('click', function() {
+                const controlPanel = document.querySelector('.control-panel');
+                const toggleBtn = document.getElementById('toggleControlPanel');
+                
+                if(controlPanel.classList.contains('collapsed')) {
+                    controlPanel.classList.remove('collapsed');
+                    toggleBtn.innerHTML = '<i class="fas fa-cog"></i><span>설정 패널</span>';
+                    
+                    // 설정 패널을 열 때 dateSelector의 날짜를 오늘 날짜로 설정
+                    const today = new Date();
+                    document.getElementById('dateSelector').valueAsDate = today;
+                } else {
+                    controlPanel.classList.add('collapsed');
+                    toggleBtn.innerHTML = '<i class="fas fa-cog"></i><span>설정 열기</span>';
+                }
+            });
             
             // Supabase 초기화
             initSupabase().then(() => {

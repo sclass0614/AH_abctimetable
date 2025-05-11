@@ -25,13 +25,12 @@ body {
 
 .date-selector {
     text-align: center;
-    margin-bottom: 20px;
     background: white;
-    padding: 15px;
+    padding: 0.5rem;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
-    max-width: 500px;
-    margin: 0 auto 20px;
+    width: 100%;
+    margin: 0 ;
 }
 
 .date-selector input[type="date"] {
@@ -74,9 +73,8 @@ body {
     width: 210mm;
     min-height: auto;
     max-height: none;
-    /* 297mm를 없애고 제한 없이 높이 설정 */
-    padding: 10mm;
-    margin: 0 auto;
+    padding: 15mm 10mm;
+    margin: 60px auto 20px;
     background: white;
     box-shadow: var(--shadow);
     border-radius: var(--border-radius);
@@ -256,31 +254,45 @@ body::after {
 }
 
 /* 연한 에메랄드 */
-
-.loading {
-    text-align: center;
-    color: var(--secondary-color);
-    font-size: 14px;
-    margin: 15px 0;
-    padding: 15px;
-    background: white;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
+.member-tag.pastel-9 {
+    background-color: #FFF1AC;
+    color: #333;
 }
 
-.loading i {
-    margin-right: 8px;
-    animation: spin 1s linear infinite;
+/* 연한 노랑 */
+.member-tag.pastel-10 {
+    background-color: #D4A5A5;
+    color: #333;
 }
 
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
+/* 연한 갈색 */
+.member-tag.pastel-11 {
+    background-color: #9FC5E8;
+    color: #333;
+}
 
-    100% {
-        transform: rotate(360deg);
-    }
+/* 연한 파랑 */
+.member-tag.pastel-12 {
+    background-color: #D5A6BD;
+    color: #333;
+}
+
+/* 연한 자주색 */
+.member-tag.pastel-13 {
+    background-color: #B6D7A8;
+    color: #333;
+}
+
+/* 연한 녹색 */
+.member-tag.pastel-14 {
+    background-color: #FFD966;
+    color: #333;
+}
+
+/* 연한 황금색 */
+.member-tag.pastel-15 {
+    background-color: #A4C2F4;
+    color: #333;
 }
 
 .activity-tag {
@@ -305,6 +317,16 @@ body::after {
     display: flex;
     flex-direction: column;
     gap: 15px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.control-panel.collapsed {
+    height: 0;
+    padding: 0;
+    margin: 0;
+    opacity: 0;
+    visibility: hidden;
 }
 
 .control-group {
@@ -624,5 +646,48 @@ body::after {
 .schedule-table td:nth-child(5) {
     width: 35%;
     white-space: normal;
+}
+
+/* 토글 버튼 스타일 */
+.toggle-button {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    padding: 10px 15px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.toggle-button:hover {
+    background-color: var(--secondary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.toggle-button i {
+    font-size: 16px;
+}
+
+/* 인쇄 시 토글 버튼 숨김 */
+@media print {
+    .toggle-button {
+        display: none;
+    }
+}
+
+/* 제어판이 접혔을 때 시간표 상단 여백 조정 */
+.control-panel.collapsed + .a4-container {
+    margin-top: 40px;
 }
 
