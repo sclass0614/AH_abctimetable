@@ -6,6 +6,12 @@
     --text-color: #1b5e20;
     --border-radius: 12px;
     --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    /* 기본 폰트 크기 설정 - rem과 vw 조합 */
+    --font-size-small: calc(0.7rem + 0.3vw);
+    --font-size-medium: calc(0.8rem + 0.4vw);
+    --font-size-large: calc(1rem + 0.5vw);
+    --font-size-xlarge: calc(1.2rem + 0.8vw);
+    --font-size-xxlarge: calc(1.5rem + 1vw);
 }
 
 * {
@@ -17,16 +23,18 @@
 body {
     margin: 0;
     padding: 20px;
-    font-family: 'Noto Sans KR', sans-serif;
+    font-family: "Noto Sans KR", sans-serif;
     background-color: var(--background-color);
     color: var(--text-color);
     line-height: 1.4;
+    min-height: 100vh;
+    min-width: 360px;
 }
 
 .date-selector {
     text-align: center;
     background: white;
-    padding: 0.5rem;
+    padding: 1rem;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
     width: 100%;
@@ -34,12 +42,12 @@ body {
 }
 
 .date-selector input[type="date"] {
-    padding: 8px 12px;
-    font-size: 14px;
+    padding: 12px 16px;
+    font-size: var(--font-size-large);
     border: 2px solid var(--accent-color);
     border-radius: var(--border-radius);
-    font-family: 'Noto Sans KR', sans-serif;
-    margin-right: 8px;
+    font-family: "Noto Sans KR", sans-serif;
+    margin-right: 12px;
     outline: none;
     transition: all 0.3s ease;
 }
@@ -50,14 +58,14 @@ body {
 }
 
 .date-selector button {
-    padding: 8px 16px;
-    font-size: 14px;
+    padding: 12px 20px;
+    font-size: var(--font-size-large);
     background-color: var(--primary-color);
     color: white;
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;
-    font-family: 'Noto Sans KR', sans-serif;
+    font-family: "Noto Sans KR", sans-serif;
     transition: all 0.3s ease;
     display: inline-flex;
     align-items: center;
@@ -70,10 +78,10 @@ body {
 }
 
 .a4-container {
-    width: 210mm;
+    width: 100%;
     min-height: auto;
     max-height: none;
-    padding: 15mm 10mm;
+    padding: 30px;
     margin: 60px auto 20px;
     background: white;
     box-shadow: var(--shadow);
@@ -84,14 +92,14 @@ body {
 
 /* 인쇄와 화면 표시 둘 다 고려한 배경 이미지 */
 body::after {
-    content: '';
+    content: "";
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     z-index: -1;
-    background-image: url('https://i.ibb.co/HTQksZ7k/3.png');
+    background-image: url("https://i.ibb.co/HTQksZ7k/3.png");
     background-position: center center;
     background-repeat: no-repeat;
     background-size: 50%;
@@ -102,15 +110,15 @@ body::after {
 .schedule-header {
     text-align: center;
     color: var(--primary-color);
-    margin-bottom: 20px;
-    font-size: 22px;
+    margin-bottom: 30px;
+    font-size: var(--font-size-xxlarge);
     font-weight: 700;
     position: relative;
-    padding-bottom: 10px;
+    padding-bottom: 15px;
 }
 
 .schedule-header:after {
-    content: '';
+    content: "";
     position: absolute;
     bottom: 0;
     left: 50%;
@@ -123,29 +131,29 @@ body::after {
 
 .date-display {
     text-align: center;
-    font-size: 16px;
+    font-size: var(--font-size-xlarge);
     color: var(--secondary-color);
-    margin-bottom: 20px;
+    margin-bottom: 30px;
     font-weight: 500;
     background: var(--background-color);
-    padding: 8px;
+    padding: 12px;
     border-radius: var(--border-radius);
 }
 
 .schedule-table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
     table-layout: fixed;
 }
 
 .schedule-table th {
     background-color: var(--primary-color);
     color: white;
-    padding: 10px 8px;
+    padding: 15px 12px;
     text-align: center;
     font-weight: 500;
-    font-size: 14px;
+    font-size: var(--font-size-large);
     white-space: nowrap;
 }
 
@@ -158,10 +166,10 @@ body::after {
 }
 
 .schedule-table td {
-    padding: 8px 6px;
+    padding: 12px 10px;
     border-bottom: 1px solid #e0e0e0;
     text-align: center;
-    font-size: 13px;
+    font-size: var(--font-size-medium);
     white-space: nowrap;
     position: relative;
 }
@@ -183,125 +191,127 @@ body::after {
 .members-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 8px;
     justify-content: center;
     width: 100%;
+    padding: 3px;
 }
 
 .member-tag {
     display: inline-block;
-    padding: 5px 10px;
+    padding: 6px 10px;
     border-radius: 12px;
     background-color: var(--secondary-color);
     color: white;
-    font-size: 15px;
+    font-size: var(--font-size-medium);
     font-weight: 500;
     white-space: nowrap;
     line-height: 1.3;
     text-align: center;
-    margin-bottom: 4px;
-    width: calc(40% - 3px);
-    flex: 0 0 calc(40% - 3px);
-    box-sizing: border-box;
+    margin-bottom: 6px;
+    /* 한글 4글자 + 패딩을 고려한 동적 너비 계산 - 더 좁게 조정 */
+    width: calc((var(--font-size-medium) * 4 * 1.2) + 20px);
+    min-width: fit-content;
+    flex: 0 1 auto;
 }
 
 /* 파스텔 톤 회원 태그 색상 */
 .member-tag.pastel-1 {
-    background-color: #FFB6C1;
+    background-color: #ffb6c1;
     color: #333;
 }
 
 /* 연한 분홍 */
 .member-tag.pastel-2 {
-    background-color: #ABDEE6;
+    background-color: #abdee6;
     color: #333;
 }
 
 /* 연한 하늘 */
 .member-tag.pastel-3 {
-    background-color: #CBAACB;
+    background-color: #cbaacb;
     color: #333;
 }
 
 /* 연한 보라 */
 .member-tag.pastel-4 {
-    background-color: #B5EAD7;
+    background-color: #b5ead7;
     color: #333;
 }
 
 /* 연한 민트 */
 .member-tag.pastel-5 {
-    background-color: #FFCCB6;
+    background-color: #ffccb6;
     color: #333;
 }
 
 /* 연한 주황 */
 .member-tag.pastel-6 {
-    background-color: #F8B195;
+    background-color: #f8b195;
     color: #333;
 }
 
 /* 연한 코랄 */
 .member-tag.pastel-7 {
-    background-color: #C3AED6;
+    background-color: #c3aed6;
     color: #333;
 }
 
 /* 라벤더 */
 .member-tag.pastel-8 {
-    background-color: #A2D7D8;
+    background-color: #a2d7d8;
     color: #333;
 }
 
 /* 연한 에메랄드 */
 .member-tag.pastel-9 {
-    background-color: #FFF1AC;
+    background-color: #fff1ac;
     color: #333;
 }
 
 /* 연한 노랑 */
 .member-tag.pastel-10 {
-    background-color: #D4A5A5;
+    background-color: #d4a5a5;
     color: #333;
 }
 
 /* 연한 갈색 */
 .member-tag.pastel-11 {
-    background-color: #9FC5E8;
+    background-color: #9fc5e8;
     color: #333;
 }
 
 /* 연한 파랑 */
 .member-tag.pastel-12 {
-    background-color: #D5A6BD;
+    background-color: #d5a6bd;
     color: #333;
 }
 
 /* 연한 자주색 */
 .member-tag.pastel-13 {
-    background-color: #B6D7A8;
+    background-color: #b6d7a8;
     color: #333;
 }
 
 /* 연한 녹색 */
 .member-tag.pastel-14 {
-    background-color: #FFD966;
+    background-color: #ffd966;
     color: #333;
 }
 
 /* 연한 황금색 */
 .member-tag.pastel-15 {
-    background-color: #A4C2F4;
+    background-color: #a4c2f4;
     color: #333;
 }
 
 .activity-tag {
     display: inline-block;
-    padding: 3px 8px;
+    padding: 6px 12px;
     border-radius: 12px;
     background-color: var(--accent-color);
     color: white;
-    font-size: 13px;
+    font-size: var(--font-size-medium);
     font-weight: 500;
     white-space: normal;
     line-height: 1.3;
@@ -309,14 +319,14 @@ body::after {
 
 .control-panel {
     background: white;
-    padding: 20px;
+    padding: 30px;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
-    width: 210mm;
-    margin: 0 auto 20px;
+    width: 100%;
+    margin: 0 auto 30px;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 20px;
     transition: all 0.3s ease;
     overflow: hidden;
 }
@@ -331,9 +341,9 @@ body::after {
 
 .control-group {
     display: grid;
-    grid-template-columns: 100px 1fr;
+    grid-template-columns: 15% 85%;
     align-items: center;
-    gap: 15px;
+    gap: 20px;
 }
 
 .control-group:last-child {
@@ -341,38 +351,38 @@ body::after {
 }
 
 .control-group label {
-    font-size: 14px;
+    font-size: var(--font-size-medium);
     color: var(--text-color);
     font-weight: 500;
 }
 
 .control-group select {
-    padding: 8px 12px;
-    font-size: 14px;
+    padding: 12px 16px;
+    font-size: var(--font-size-medium);
     border: 1px solid var(--accent-color);
     border-radius: var(--border-radius);
-    font-family: 'Noto Sans KR', sans-serif;
+    font-family: "Noto Sans KR", sans-serif;
     outline: none;
     width: 100%;
 }
 
 .sort-options {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 12px;
     width: 100%;
 }
 
 .sort-select {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: 25% 75%;
     align-items: center;
     gap: 8px;
 }
 
 .sort-combo {
     padding: 8px 12px;
-    font-size: 14px;
+    font-size: var(--font-size-small);
     border: 1px solid var(--accent-color);
     border-radius: var(--border-radius);
     outline: none;
@@ -381,14 +391,14 @@ body::after {
 
 .sort-order {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: 25% 75%;
     align-items: center;
     gap: 8px;
 }
 
 .sort-order select {
     padding: 8px 12px;
-    font-size: 14px;
+    font-size: var(--font-size-small);
     border: 1px solid var(--accent-color);
     border-radius: var(--border-radius);
     outline: none;
@@ -399,23 +409,23 @@ body::after {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    margin-top: 10px;
+    width: 100%;
 }
 
 .btn {
-    padding: 8px 16px;
-    font-size: 14px;
+    padding: 12px 20px;
+    font-size: var(--font-size-medium);
     background-color: var(--primary-color);
     color: white;
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;
-    font-family: 'Noto Sans KR', sans-serif;
+    font-family: "Noto Sans KR", sans-serif;
     transition: all 0.3s ease;
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    min-width: 120px;
+    min-width: 100px;
     justify-content: center;
 }
 
@@ -432,37 +442,57 @@ body::after {
     background-color: white;
     color: var(--primary-color);
     border: 1px solid var(--primary-color);
-}
-
-.print-button {
-    min-width: 110px !important;
-    width: auto !important;
-    padding: 8px 10px !important;
-    font-size: 12px !important;
+    width: 100%;
+    max-width: 160px;
 }
 
 .button-group {
     display: flex;
-    gap: 10px;
-    /* 버튼 사이 간격 */
+    gap: 6px;
     justify-content: flex-end;
-    /* 우측 정렬 */
     width: 100%;
-    /* 부모 영역 전체 너비 사용 */
+}
+
+.mergeprint-group {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    width: 100%;
+    flex-wrap: wrap;
 }
 
 .merge-button {
-    min-width: 110px !important;
+    min-width: 60px !important;
     width: auto !important;
-    padding: 8px 10px !important;
-    font-size: 12px !important;
+    padding: 6px 8px !important;
+    font-size: var(--font-size-small) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
 .staff-merge-button {
-    min-width: 110px !important;
+    min-width: 60px !important;
     width: auto !important;
-    padding: 8px 10px !important;
-    font-size: 12px !important;
+    padding: 6px 8px !important;
+    font-size: var(--font-size-small) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.print-button {
+    min-width: 60px !important;
+    width: auto !important;
+    padding: 6px 8px !important;
+    font-size: var(--font-size-small) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.staff-merge-button i {
+    margin-right: 4px !important;
 }
 
 @page {
@@ -475,7 +505,8 @@ body::after {
     html,
     body {
         width: 210mm;
-        height: 297mm;
+        height: auto;
+        min-height: initial;
         margin: 0;
         padding: 0;
         background: transparent;
@@ -484,23 +515,23 @@ body::after {
     /* 페이지마다 배경 이미지를 추가하기 위한 요소 */
     body::after {
         content: "";
-        position: fixed;
+        position: absolute;
         top: 0;
         left: 0;
         height: 100%;
         width: 100%;
         z-index: -1;
-        background-image: url('https://i.ibb.co/HTQksZ7k/3.png');
+        background-image: url("https://i.ibb.co/HTQksZ7k/3.png");
         background-position: center center;
         background-repeat: no-repeat;
-        background-size: 50;
+        background-size: 50%;
         opacity: 0.1;
     }
 
-    .a4-container {
+    .container {
         width: 100%;
         height: auto;
-        min-height: auto;
+        min-height: initial;
         padding: 0;
         margin: 0;
         box-shadow: none;
@@ -511,14 +542,11 @@ body::after {
         background: transparent;
     }
 
-    .a4-container::before {
-        content: none;
-    }
-
     .schedule-table {
         page-break-inside: auto;
         border-radius: 0;
         background: transparent;
+        margin-bottom: 0;
     }
 
     .date-selector,
@@ -579,6 +607,21 @@ body::after {
     .schedule-table tbody tr:first-child td {
         padding-top: 10px;
     }
+
+    /* 불필요한 여백 제거 */
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
+    .schedule-table th:nth-child(4),
+    .schedule-table td:nth-child(4) {
+        width: 20%;
+        white-space: normal;
+        word-break: keep-all;
+        word-wrap: break-word;
+        font-size: 11px;
+    }
 }
 
 /* 필터링된 행 스타일 추가 */
@@ -607,7 +650,7 @@ body::after {
 }
 
 .rowspan-cell::after {
-    content: '';
+    content: "";
     position: absolute;
     bottom: 0;
     left: 0;
@@ -624,11 +667,16 @@ body::after {
 .schedule-table th:nth-child(1),
 .schedule-table td:nth-child(1) {
     width: 10%;
+    white-space: nowrap;
 }
 
 .schedule-table th:nth-child(2),
 .schedule-table td:nth-child(2) {
     width: 15%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 0;
 }
 
 .schedule-table th:nth-child(3),
@@ -641,7 +689,7 @@ body::after {
 .schedule-table td:nth-child(4) {
     width: 20%;
     white-space: normal;
-    font-size: 14px;
+    font-size: var(--font-size-medium);
 }
 
 .schedule-table th:nth-child(5),
@@ -652,17 +700,18 @@ body::after {
 
 /* 토글 버튼 스타일 */
 .toggle-button {
+    padding: 15px 20px;
+    font-size: var(--font-size-medium);
     position: fixed;
     top: 20px;
     right: 20px;
     z-index: 1000;
-    padding: 10px 15px;
     background-color: var(--primary-color);
     color: white;
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;
-    font-family: 'Noto Sans KR', sans-serif;
+    font-family: "Noto Sans KR", sans-serif;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -678,7 +727,7 @@ body::after {
 }
 
 .toggle-button i {
-    font-size: 16px;
+    font-size: var(--font-size-medium);
 }
 
 /* 인쇄 시 토글 버튼 숨김 */
@@ -691,4 +740,73 @@ body::after {
 /* 제어판이 접혔을 때 시간표 상단 여백 조정 */
 .control-panel.collapsed+.a4-container {
     margin-top: 40px;
+}
+
+.sort-options button {
+    width: 100%;
+    min-width: unset;
+    max-width: 160px;
+    margin-left: auto;
+}
+
+/* 필터 select 요소들의 공통 스타일 */
+#classFilter,
+#staffFilter,
+#memberFilter {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: var(--font-size-medium);
+}
+
+.container {
+    width: 100%;
+    height: calc(100vh - 40px);
+    overflow-y: auto;
+    padding: 30px;
+    margin: 20px auto;
+    background: white;
+    box-shadow: var(--shadow);
+    border-radius: var(--border-radius);
+    position: relative;
+    /* 스크롤을 부드럽게 */
+    scroll-behavior: smooth;
+}
+
+/* 스크롤바 스타일링 */
+.container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.container::-webkit-scrollbar-thumb {
+    background: var(--accent-color);
+    border-radius: 4px;
+}
+
+.container::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-color);
+}
+
+.autoscroll-button {
+    min-width: 60px !important;
+    width: auto !important;
+    padding: 6px 8px !important;
+    font-size: var(--font-size-small) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    transition: all 0.3s ease !important;
+}
+
+.autoscroll-button.active {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+.autoscroll-button i {
+    margin-right: 4px !important;
 }
