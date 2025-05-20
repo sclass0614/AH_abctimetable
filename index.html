@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <title>일일 활동 시간표</title>
@@ -8,9 +9,10 @@
     <!-- Supabase CDN 추가 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase.js"></script>
-    <script type="module" src="https://sclass0614.github.io/authCheck/authCheck.js"></script>
+    <!-- <script type="module" src="https://sclass0614.github.io/authCheck/authCheck.js"></script> -->
 
 </head>
+
 <body>
     <!-- 토글 버튼 추가 -->
     <button id="toggleControlPanel" class="toggle-button">
@@ -95,7 +97,8 @@
                 <button class="btn btn-secondary merge-button" id="toggleMergeBtn" onclick="toggleMergeRows()">
                     <i class="fas fa-compress-alt"></i> 차수합치기
                 </button>
-                <button class="btn btn-secondary staff-merge-button" id="toggleStaffMergeBtn" onclick="toggleStaffMerge()">
+                <button class="btn btn-secondary staff-merge-button" id="toggleStaffMergeBtn"
+                    onclick="toggleStaffMerge()">
                     <i class="fas fa-user-friends"></i> 직원명합치기
                 </button>
                 <button class="btn btn-secondary print-button" onclick="window.print()">
@@ -124,7 +127,7 @@
     </div>
 
     <script>
-       
+
 
         // 시간 포맷팅 함수는 그대로 유지
         function formatTime(time) {
@@ -158,14 +161,14 @@
             const today = new Date();
             const dateSelector = document.getElementById('dateSelector');
             dateSelector.valueAsDate = today;
-            
+
             // 오늘 날짜를 표시
             const formattedDate = formatDateFromDate(today);
             document.getElementById('currentDate').textContent = formattedDate;
-            
+
             // 오늘 날짜의 데이터 바로 로드
             const yyyymmdd = parseInt(formatYYYYMMDD(today));
-            
+
             try {
                 const data = await getScheduleData(yyyymmdd);
                 scheduleDataAll = data;
@@ -189,12 +192,12 @@
             if (primary) sortCriteria.push(primary);
             if (secondary && secondary !== primary) sortCriteria.push(secondary);
             if (tertiary && tertiary !== primary && tertiary !== secondary) sortCriteria.push(tertiary);
-            
+
             // 정렬 기준이 없으면 기본값으로 차수, 활동명 오름차순 사용
             if (sortCriteria.length === 0) {
                 sortCriteria = ['class', 'activity'];
             }
-            
+
             applyFilters();
         }
 
@@ -203,7 +206,7 @@
             return [...data].sort((a, b) => {
                 for (const criterion of criteria) {
                     let comparison = 0;
-                    
+
                     switch (criterion) {
                         case 'time':
                             comparison = parseInt(a.시작시간) - parseInt(b.시작시간);
@@ -218,7 +221,7 @@
                             comparison = a.활동명.localeCompare(b.활동명);
                             break;
                     }
-                    
+
                     if (comparison !== 0) {
                         return direction === 'desc' ? -comparison : comparison;
                     }
@@ -230,11 +233,11 @@
         // 활동별로 데이터 그룹화하는 함수
         function groupByActivity(data) {
             const groups = {};
-            
+
             data.forEach(item => {
                 // 활동을 식별하는 고유 키 생성 - 계획_ID 대신 차수 + 시작시간 + 활동명 + 직원명 조합으로 생성
                 const key = `${item.차수}_${item.시작시간}_${item.활동명}_${item.직원명}`;
-                
+
                 if (!groups[key]) {
                     groups[key] = {
                         계획_ID: item.계획_ID,
@@ -247,11 +250,11 @@
                         회원명: []
                     };
                 }
-                
+
                 // 회원 추가
                 groups[key].회원명.push(item.회원명);
             });
-            
+
             // 객체를 배열로 변환
             return Object.values(groups);
         }
@@ -265,7 +268,7 @@
 
         // 각 회원에게 고유한 파스텔 색상 부여 
         const memberColorMap = new Map();
-        
+
         // 특정 회원에게 항상 같은 색상을 부여하는 함수
         function getMemberColorClass(memberName) {
             if (!memberColorMap.has(memberName)) {
@@ -282,23 +285,23 @@
         // 행 병합 토글 함수
         function toggleMergeRows() {
             isRowsMerged = !isRowsMerged;
-            
+
             // 버튼 텍스트 업데이트
             const toggleBtn = document.getElementById('toggleMergeBtn');
             if (isRowsMerged) {
                 toggleBtn.innerHTML = '<i class="fas fa-compress-alt"></i> 합친 행 분리하기';
-                
+
                 // 차수, 시간, 직원명 기준으로 정렬 후 병합
                 sortCriteria = ['class', 'time', 'staff'];
                 const direction = 'asc';
-                
+
                 // 필터 상태 유지하면서 정렬만 변경
                 const staffFilter = document.getElementById('staffFilter').value;
                 const memberFilter = document.getElementById('memberFilter').value;
                 const classFilter = document.getElementById('classFilter').value;
-                
+
                 let filteredData = scheduleDataAll;
-                
+
                 if (classFilter) {
                     filteredData = filteredData.filter(item => item.차수 === classFilter);
                 }
@@ -308,30 +311,30 @@
                 if (memberFilter) {
                     filteredData = filteredData.filter(item => item.회원명 === memberFilter);
                 }
-                
+
                 let sortedData = multiSort(filteredData, sortCriteria, direction);
                 const groupedData = groupByActivity(sortedData);
-                
+
                 // 테이블 다시 생성
                 const tbody = document.getElementById('scheduleTableBody');
                 tbody.innerHTML = '';
-                
+
                 if (groupedData.length === 0) {
                     const row = document.createElement('tr');
                     row.innerHTML = '<td colspan="5" style="text-align: center;">해당 조건의 일정이 없습니다.</td>';
                     tbody.appendChild(row);
                     return;
                 }
-                
+
                 // 그룹화된 데이터로 테이블 생성
                 groupedData.forEach(group => {
                     const row = document.createElement('tr');
-                    
+
                     // 회원 태그 생성
-                    const memberTags = group.회원명.map(member => 
+                    const memberTags = group.회원명.map(member =>
                         `<span class="member-tag ${getMemberColorClass(member)}">${member}</span>`
                     ).join('');
-                    
+
                     row.innerHTML = `
                         <td>${group.차수}</td>
                         <td>${formatTime(group.시작시간)} - ${formatTime(group.종료시간)}</td>
@@ -347,22 +350,22 @@
                     `;
                     tbody.appendChild(row);
                 });
-                
+
                 // 행 병합 적용
                 mergeTableRows();
             } else {
                 toggleBtn.innerHTML = '<i class="fas fa-compress-alt"></i> 차수합치기';
-                
+
                 // 병합 해제하고 원래 필터 상태로 복원
                 applyFilters();
             }
         }
-        
+
         // 행 병합 처리 함수
         function mergeTableRows() {
             const tbody = document.getElementById('scheduleTableBody');
             const rows = tbody.querySelectorAll('tr');
-            
+
             // 먼저 모든 rowspan 및 스타일 초기화
             rows.forEach(row => {
                 row.querySelectorAll('td').forEach(cell => {
@@ -370,23 +373,23 @@
                     cell.classList.remove('rowspan-cell', 'hidden-row');
                 });
             });
-            
+
             if (rows.length <= 1) return;
-            
+
             let prevClass = null;
             let prevTime = null;
             let rowspanClassCount = 1;
             let rowspanTimeCount = 1;
             let classCell = null;
             let timeCell = null;
-            
+
             for (let i = 0; i < rows.length; i++) {
                 const cells = rows[i].querySelectorAll('td');
                 if (cells.length < 2) continue;
-                
+
                 const currentClass = cells[0].textContent;
                 const currentTime = cells[1].textContent;
-                
+
                 // 첫 번째 행은 기준값으로 설정
                 if (i === 0) {
                     prevClass = currentClass;
@@ -395,12 +398,12 @@
                     timeCell = cells[1];
                     continue;
                 }
-                
+
                 // 차수가 같은 경우 rowspan 증가
                 if (currentClass === prevClass) {
                     rowspanClassCount++;
                     cells[0].classList.add('hidden-row');
-                    
+
                     // 시간도 같은 경우 시간 rowspan 증가
                     if (currentTime === prevTime) {
                         rowspanTimeCount++;
@@ -433,7 +436,7 @@
                     timeCell = cells[1];
                 }
             }
-            
+
             // 마지막 그룹 처리
             if (rowspanClassCount > 1) {
                 classCell.setAttribute('rowspan', rowspanClassCount);
@@ -448,12 +451,12 @@
         // 직원명 기준 병합 토글 함수
         function toggleStaffMerge() {
             isStaffMerged = !isStaffMerged;
-            
+
             // 버튼 텍스트 업데이트
             const toggleBtn = document.getElementById('toggleStaffMergeBtn');
             if (isStaffMerged) {
                 toggleBtn.innerHTML = '<i class="fas fa-user-friends"></i> 원래대로';
-                
+
                 // 기존 행 병합 상태 기억
                 const wasRowsMerged = isRowsMerged;
                 if (isRowsMerged) {
@@ -461,12 +464,12 @@
                     isRowsMerged = false;
                     document.getElementById('toggleMergeBtn').innerHTML = '<i class="fas fa-compress-alt"></i> 차수합치기';
                 }
-                
+
                 // 직원명 기준 재정렬 및 병합
                 applyStaffMerge();
             } else {
                 toggleBtn.innerHTML = '<i class="fas fa-user-friends"></i> 직원명합치기';
-                
+
                 // 테이블 헤더 원래대로 복원
                 const thead = document.querySelector('.schedule-table thead tr');
                 thead.innerHTML = `
@@ -476,58 +479,58 @@
                     <th>직원명</th>
                     <th>참여 회원</th>
                 `;
-                
+
                 // 원래 정렬 및 필터 상태로 복원
                 applyFilters();
             }
         }
-        
+
         // 직원명 기준 병합 적용 함수
         function applyStaffMerge() {
             // 직원명를 첫 번째 열로 만들고 직원명 + 시간 순으로 정렬
             const tbody = document.getElementById('scheduleTableBody');
             const thead = document.querySelector('.schedule-table thead tr');
-            
+
             // 테이블 헤더 순서 변경
             const headers = thead.querySelectorAll('th');
             const headerTexts = Array.from(headers).map(th => th.textContent);
-            
+
             // 직원명 열을 첫 번째로 이동
             const staffIndex = headerTexts.indexOf('직원명');
             if (staffIndex > 0) {
                 const staffHeader = headerTexts.splice(staffIndex, 1)[0];
                 headerTexts.unshift(staffHeader);
-                
+
                 thead.innerHTML = headerTexts.map(text => `<th>${text}</th>`).join('');
             }
-            
+
             // 데이터를 직원명 + 시간 기준으로 정렬
             sortCriteria = ['staff', 'time'];
             const direction = 'asc';
             let sortedData = multiSort(scheduleDataAll, sortCriteria, direction);
-            
+
             // 활동별로 그룹화
             const groupedData = groupByActivity(sortedData);
-            
+
             // 새로운 테이블 데이터 생성
             tbody.innerHTML = '';
-            
+
             if (groupedData.length === 0) {
                 const row = document.createElement('tr');
                 row.innerHTML = '<td colspan="5" style="text-align: center;">해당 조건의 일정이 없습니다.</td>';
                 tbody.appendChild(row);
                 return;
             }
-            
+
             // 그룹화된 데이터로 테이블 생성 (직원명를 첫 번째 열로)
             groupedData.forEach(group => {
                 const row = document.createElement('tr');
-                
+
                 // 회원 태그 생성
-                const memberTags = group.회원명.map(member => 
+                const memberTags = group.회원명.map(member =>
                     `<span class="member-tag ${getMemberColorClass(member)}">${member}</span>`
                 ).join('');
-                
+
                 row.innerHTML = `
                     <td>${group.직원명}</td>
                     <td>${group.차수}</td>
@@ -543,16 +546,16 @@
                 `;
                 tbody.appendChild(row);
             });
-            
+
             // 직원명 기준으로 행 병합
             mergeStaffRows();
         }
-        
+
         // 직원명 기준 행 병합 처리
         function mergeStaffRows() {
             const tbody = document.getElementById('scheduleTableBody');
             const rows = tbody.querySelectorAll('tr');
-            
+
             // 먼저 모든 rowspan 및 스타일 초기화
             rows.forEach(row => {
                 row.querySelectorAll('td').forEach(cell => {
@@ -560,19 +563,19 @@
                     cell.classList.remove('rowspan-cell', 'hidden-row');
                 });
             });
-            
+
             if (rows.length <= 1) return;
-            
+
             let prevStaff = null;
             let rowspanStaffCount = 1;
             let staffCell = null;
-            
+
             for (let i = 0; i < rows.length; i++) {
                 const cells = rows[i].querySelectorAll('td');
                 if (cells.length < 1) continue;
-                
+
                 const currentStaff = cells[0].textContent;
-                
+
                 // 첫 번째 행은 기준값으로 설정
                 if (i === 0) {
                     prevStaff = currentStaff;
@@ -581,7 +584,7 @@
                     staffCell.classList.add('rowspan-cell');
                     continue;
                 }
-                
+
                 // 직원명가 같은 경우 rowspan 증가
                 if (currentStaff === prevStaff) {
                     rowspanStaffCount++;
@@ -598,7 +601,7 @@
                     staffCell.classList.add('rowspan-cell');
                 }
             }
-            
+
             // 마지막 그룹 처리
             if (rowspanStaffCount > 1) {
                 staffCell.setAttribute('rowspan', rowspanStaffCount);
@@ -640,16 +643,16 @@
 
             // 활동별로 그룹화
             const groupedData = groupByActivity(filteredData);
-            
+
             // 그룹화된 데이터로 테이블 생성
             groupedData.forEach(group => {
                 const row = document.createElement('tr');
-                
+
                 // 회원 태그 생성
-                const memberTags = group.회원명.map(member => 
+                const memberTags = group.회원명.map(member =>
                     `<span class="member-tag ${getMemberColorClass(member)}">${member}</span>`
                 ).join('');
-                
+
                 row.innerHTML = `
                     <td>${group.차수}</td>
                     <td>${formatTime(group.시작시간)} - ${formatTime(group.종료시간)}</td>
@@ -689,11 +692,11 @@
         // 필터 옵션 업데이트 함수 수정
         function updateFilterOptions(data) {
             scheduleDataAll = data;
-            
+
             const staffFilter = document.getElementById('staffFilter');
             const memberFilter = document.getElementById('memberFilter');
             const classFilter = document.getElementById('classFilter');
-            
+
             // 차수 옵션 업데이트
             const classSet = new Set(data.map(item => item.차수));
             classFilter.innerHTML = '<option value="">전체 차수</option>';
@@ -728,10 +731,10 @@
             const selectedDate = new Date(dateSelector.value);
             const formattedDate = formatDateFromDate(selectedDate);
             document.getElementById('currentDate').textContent = formattedDate;
-            
+
             // YYYYMMDD 형식으로 날짜 변환 후 정수로 변환
             const yyyymmdd = parseInt(formatYYYYMMDD(selectedDate));
-            
+
             try {
                 const data = await getScheduleData(yyyymmdd);
                 scheduleDataAll = data;
@@ -755,19 +758,19 @@
         }
 
         // 페이지 로드 시 실행
-        window.onload = function() {
+        window.onload = function () {
             // 기본 정렬 기준 설정 - 차수, 활동명 오름차순
             sortCriteria = ['class', 'activity'];
-            
+
             // 토글 버튼 이벤트 리스너 추가
-            document.getElementById('toggleControlPanel').addEventListener('click', function() {
+            document.getElementById('toggleControlPanel').addEventListener('click', function () {
                 const controlPanel = document.querySelector('.control-panel');
                 const toggleBtn = document.getElementById('toggleControlPanel');
-                
-                if(controlPanel.classList.contains('collapsed')) {
+
+                if (controlPanel.classList.contains('collapsed')) {
                     controlPanel.classList.remove('collapsed');
                     toggleBtn.innerHTML = '<i class="fas fa-cog"></i><span>설정 패널</span>';
-                    
+
                     // 설정 패널을 열 때 dateSelector의 날짜를 오늘 날짜로 설정
                     const today = new Date();
                     document.getElementById('dateSelector').valueAsDate = today;
@@ -776,7 +779,7 @@
                     toggleBtn.innerHTML = '<i class="fas fa-cog"></i><span>설정 열기</span>';
                 }
             });
-            
+
             // Supabase 초기화
             initSupabase().then(() => {
                 initializeDateSelector();
@@ -786,4 +789,5 @@
         };
     </script>
 </body>
+
 </html>
